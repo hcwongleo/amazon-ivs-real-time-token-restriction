@@ -48,25 +48,27 @@ User Browser (Singapore, localhost:3000)
 - IVS RealTime stage
 - Node.js 20.x
 
-### 1. Generate ES384 Key Pair
+### 1. Create or Import a Key Pair
 
-**Option A: Let IVS generate the key pair (Recommended)**
+You need to generate an ECDSA public/private key pair to sign the JWTs. IVS uses the public key to verify the signature in participant tokens.
+
+**Option A: Let IVS create the key pair (Recommended)**
 
 ```bash
 aws ivs create-public-key --region us-east-1
 ```
 
 This returns both private and public keys. Save the entire response:
-- Copy `privateKeyMaterial` for CloudFormation deployment (Step 4)
-- Copy `arn` for CloudFormation deployment (Step 4)
+- Copy `privateKeyMaterial` for CloudFormation deployment (Step 3)
+- Copy `arn` for CloudFormation deployment (Step 3)
 
 For more details, see [Creating a public-private key pair](https://docs.aws.amazon.com/ivs/latest/LowLatencyUserGuide/private-channels-create-key.html).
 
-**Option B: Generate with OpenSSL**
+**Option B: Create with OpenSSL and import**
 
 ```bash
-# Generate private key
-openssl ecparam -genkey -name secp384r1 -noout -out private-key.pem
+# Create a new P-384 EC key pair
+openssl ecparam -name secp384r1 -genkey -noout -out private-key.pem
 
 # Extract public key
 openssl ec -in private-key.pem -pubout -out public-key.pem
