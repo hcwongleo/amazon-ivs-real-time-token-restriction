@@ -50,36 +50,37 @@ User Browser (Singapore, localhost:3000)
 
 ### 1. Create or Import a Key Pair
 
-You need to generate an ECDSA public/private key pair to sign the JWTs. IVS uses the public key to verify the signature in participant tokens.
+You need to generate an ECDSA public/private key pair to sign the JWTs. IVS uses the public key to verify the tokens at the time of stage join.
 
-**Option A: Let IVS create the key pair (Recommended)**
+**Option A: Create with the Console (Recommended)**
 
-```bash
-aws ivs create-public-key --region us-east-1
-```
+1. Open the Amazon IVS console and choose your stage's region
+2. In the left navigation menu, choose **Real-time streaming > Public keys**
+3. Choose **Create public key**
+4. Follow the prompts and choose **Create**
 
-This returns both private and public keys. Save the entire response:
-- Copy `privateKeyMaterial` for CloudFormation deployment (Step 3)
-- Copy `arn` for CloudFormation deployment (Step 3)
+Amazon IVS generates a new key pair. The public key is imported as a public key resource and the private key is immediately made available for download. **Be sure you save the private key; you cannot retrieve it later.**
 
-For more details, see [Creating a public-private key pair](https://docs.aws.amazon.com/ivs/latest/LowLatencyUserGuide/private-channels-create-key.html).
+Save the ARN and private key for CloudFormation deployment (Step 3).
 
-**Option B: Create with OpenSSL and import**
+For more details, see [Distribute Participant Tokens](https://docs.aws.amazon.com/ivs/latest/RealTimeUserGuide/getting-started-distribute-tokens.html).
+
+**Option B: Create with OpenSSL and Import**
 
 ```bash
 # Create a new P-384 EC key pair
-openssl ecparam -name secp384r1 -genkey -noout -out private-key.pem
+openssl ecparam -name secp384r1 -genkey -noout -out priv.pem
 
 # Extract public key
-openssl ec -in private-key.pem -pubout -out public-key.pem
+openssl ec -in priv.pem -pubout -out public.pem
 
-# Import public key to IVS
-aws ivs import-public-key \
-  --public-key-material file://public-key.pem \
+# Import public key to IVS RealTime
+aws ivs-realtime import-public-key \
+  --public-key-material "`cat public.pem`" \
   --region us-east-1
 ```
 
-Save the returned ARN from the import command.
+Save the returned ARN and your private key content for CloudFormation deployment (Step 3).
 
 ### 2. Prepare Lambda Package
 
