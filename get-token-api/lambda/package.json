@@ -1,9 +1,0 @@
-{
-  "name": "ivs-token-generator",
-  "version": "1.0.0",
-  "description": "Lambda function to generate IVS RealTime tokens with geo-blocking and origin check",
-  "main": "tokenGenerator.js",
-  "dependencies": {
-    "@aws-sdk/client-ivs-realtime": "^3.0.0"
-  }
-}
