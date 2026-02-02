@@ -50,25 +50,36 @@ User Browser (Singapore, localhost:3000)
 
 ### 1. Generate ES384 Key Pair
 
+**Option A: Let IVS generate the key pair (Recommended)**
+
+```bash
+aws ivs create-public-key --region us-east-1
+```
+
+This returns both private and public keys. Save the entire response:
+- Copy `privateKeyMaterial` for CloudFormation deployment (Step 4)
+- Copy `arn` for CloudFormation deployment (Step 4)
+
+For more details, see [Creating a public-private key pair](https://docs.aws.amazon.com/ivs/latest/LowLatencyUserGuide/private-channels-create-key.html).
+
+**Option B: Generate with OpenSSL**
+
 ```bash
 # Generate private key
 openssl ecparam -genkey -name secp384r1 -noout -out private-key.pem
 
 # Extract public key
 openssl ec -in private-key.pem -pubout -out public-key.pem
-```
 
-### 2. Import Public Key to IVS
-
-```bash
+# Import public key to IVS
 aws ivs import-public-key \
   --public-key-material file://public-key.pem \
   --region us-east-1
 ```
 
-Save the returned ARN (e.g., `arn:aws:ivs:us-east-1:123456789012:public-key/AbCdEfGh`).
+Save the returned ARN from the import command.
 
-### 3. Prepare Lambda Package
+### 2. Prepare Lambda Package
 
 ```bash
 cd get-token-key/lambda
@@ -76,31 +87,31 @@ npm install --production
 zip -r function.zip tokenGenerator.js package.json node_modules/
 ```
 
-### 4. Deploy CloudFormation Stack
+### 3. Deploy CloudFormation Stack
 
 1. Open AWS Console → CloudFormation → Create Stack
 2. Upload `get-token-key/infrastructure/template.yaml`
 3. Configure parameters:
    - **Stack name**: `ivs-token-generator-key`
    - **StageArn**: Your IVS Stage ARN
-   - **PublicKeyArn**: ARN from step 2
-   - **PrivateKey**: Paste entire `private-key.pem` content
+   - **PublicKeyArn**: ARN from step 1
+   - **PrivateKey**: Paste the `privateKeyMaterial` from step 1 (or entire `private-key.pem` content if using OpenSSL)
    - **AllowedOrigins**: `http://localhost:3000`
    - **AllowedCountries**: `HK,US,CA,GB,SG`
 4. Acknowledge IAM resource creation
 5. Submit (takes ~2-3 minutes)
 
-### 5. Upload Lambda Code
+### 4. Upload Lambda Code
 
 1. Go to Lambda Console → `IVSTokenGeneratorKey`
 2. Upload from → .zip file → Select `function.zip`
 3. Save
 
-### 6. Get API Endpoint
+### 5. Get API Endpoint
 
 CloudFormation → Stack → Outputs tab → Copy `ApiEndpoint`
 
-### 7. Update Player
+### 6. Update Player
 
 Edit `player/player.js` line 27:
 
@@ -108,7 +119,7 @@ Edit `player/player.js` line 27:
 const API_ENDPOINT = 'https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod/token';
 ```
 
-### 8. Test
+### 7. Test
 
 ```bash
 curl -X POST https://your-api-endpoint.com/prod/token \
