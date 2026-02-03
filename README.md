@@ -165,7 +165,7 @@ http://localhost:3000,http://localhost:8000,https://yourdomain.com
 
 ### Change Token Expiration
 
-Edit `get-token-key/lambda/tokenGenerator.js` line 105:
+Edit `lambda/tokenGenerator.js` line 105:
 
 ```javascript
 exp: now + 5,  // 5 seconds (current)
@@ -195,15 +195,13 @@ Redeploy Lambda after changes.
 
 CloudFormation Console → Select stack → Delete
 
-This removes all resources: Lambda, API Gateway, WAF, Secrets Manager, IAM roles, CloudWatch logs.
+This removes all resources: Lambda, API Gateway, WAF, Secrets Manager, IAM roles.
 
 ## Resources
 
-- **Full Blog Post**: See `BLOG_POST.md` for detailed explanation with architecture diagrams
-- [Amazon IVS Real-Time Streaming Documentation](https://docs.aws.amazon.com/ivs/latest/RealTimeUserGuide/)
-- [JWT Token Best Practices](https://datatracker.ietf.org/doc/html/rfc8725)
-- [AWS WAF Documentation](https://docs.aws.amazon.com/waf/)
-- [AWS Secrets Manager Best Practices](https://docs.aws.amazon.com/secretsmanager/latest/userguide/best-practices.html)
+- [Amazon IVS Real-Time Streaming User Guide](https://docs.aws.amazon.com/ivs/latest/RealTimeUserGuide/)
+- [Distribute Participant Tokens](https://docs.aws.amazon.com/ivs/latest/RealTimeUserGuide/getting-started-distribute-tokens.html)
+- [AWS WAF Developer Guide](https://docs.aws.amazon.com/waf/latest/developerguide/)
 
 ## Project Structure
 
