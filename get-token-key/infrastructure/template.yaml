@@ -1,40 +1,35 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'IVS RealTime Token Generator using Key-Based JWT Signing with Geo-blocking and Origin Check'
+Description: 'Amazon IVS Real-Time Streaming Token Generator using Key-Based JWT Signing with Geo-blocking and Origin Check'
 
 Parameters:
   StageArn:
     Type: String
-    Description: ARN of the IVS RealTime Stage
-    Default: 'arn:aws:ivs:us-east-1:385085470441:stage/Lem70VypWv33'
-  
+    Description: ARN of the Amazon IVS Real-Time Streaming Stage
+    Default: 'arn:aws:ivs:us-east-1:123456789012:stage/YOUR_STAGE_ID'
+
   PublicKeyArn:
     Type: String
     Description: ARN of the IVS public key used to sign tokens
-    Default: 'arn:aws:ivs:us-east-1:385085470441:public-key/REPLACE_WITH_YOUR_PUBLIC_KEY_ARN'
-  
-  PrivateKey:
-    Type: String
-    Description: Private key for JWT signing (PEM format) - will be stored in Secrets Manager
-    NoEcho: true
-  
+    Default: 'arn:aws:ivs:us-east-1:123456789012:public-key/YOUR_PUBLIC_KEY_ID'
+
   AllowedOrigins:
     Type: String
     Description: Allowed origin (e.g., http://localhost:3000)
     Default: 'http://localhost:3000'
   
-  AllowedCountries:
-    Type: CommaDelimitedList
-    Description: Comma-separated list of allowed country codes (e.g., US,HK)
+  AllowedCountry:
+    Type: String
+    Description: Allowed country code (e.g., US or HK)
     Default: 'HK'
 
 Resources:
-  # Secrets Manager Secret for Private Key
+  # Secrets Manager Secret for Private Key (to be populated manually after stack creation)
   PrivateKeySecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: ivs-realtime-private-key
-      Description: Private key for IVS RealTime JWT token signing
-      SecretString: !Ref PrivateKey
+      Description: Private key for Amazon IVS Real-Time Streaming JWT token signing - Must be manually populated after stack creation
+      SecretString: 'PLACEHOLDER - Replace with your private key in PEM format'
 
   # WAF Web ACL for Geo-blocking and Origin Check
   TokenApiWebACL:
@@ -70,9 +65,10 @@ Resources:
           Statement:
             AndStatement:
               Statements:
-                # Check 1: Country must be in allowed list
+                # Check 1: Country must match allowed country
                 - GeoMatchStatement:
-                    CountryCodes: !Ref AllowedCountries
+                    CountryCodes:
+                      - !Ref AllowedCountry
                 # Check 2: Origin must match exactly
                 - ByteMatchStatement:
                     SearchString: !Ref AllowedOrigins
@@ -164,7 +160,7 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: IVSTokenAPIKey
-      Description: API for generating IVS RealTime tokens using key-based JWT signing
+      Description: API for generating Amazon IVS Real-Time Streaming tokens using key-based JWT signing
       EndpointConfiguration:
         Types:
           - REGIONAL

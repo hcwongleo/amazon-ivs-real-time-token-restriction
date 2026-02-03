@@ -100,7 +100,7 @@ exports.handler = async (event) => {
     
     const now = Math.floor(Date.now() / 1000);
     
-    // Create JWT payload for IVS RealTime Stage
+    // Create JWT payload for Amazon IVS Real-Time Streaming Stage
     const payload = {
       exp: now + 5, // expires in 5 seconds
       iat: now,
