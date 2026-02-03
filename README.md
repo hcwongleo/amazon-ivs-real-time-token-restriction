@@ -51,7 +51,7 @@ Alternatively, you can generate a key pair locally using OpenSSL and import the 
 ### 2. Prepare Lambda Package
 
 ```bash
-cd get-token-key/lambda
+cd lambda
 npm install --production
 zip -r function.zip tokenGenerator.js package.json node_modules/
 ```
@@ -59,7 +59,7 @@ zip -r function.zip tokenGenerator.js package.json node_modules/
 ### 3. Deploy CloudFormation Stack
 
 1. Open AWS Console → CloudFormation → Create Stack
-2. Upload `get-token-key/infrastructure/template.yaml`
+2. Upload `infrastructure/template.yaml`
 3. Configure parameters:
    - **Stack name**: `ivs-token-generator-key`
    - **StageArn**: Your IVS Stage ARN
@@ -208,16 +208,18 @@ This removes all resources: Lambda, API Gateway, WAF, Secrets Manager, IAM roles
 ## Project Structure
 
 ```
-├── get-token-key/
-│   ├── infrastructure/
-│   │   └── template.yaml          # CloudFormation template
-│   ├── lambda/
-│   │   ├── tokenGenerator.js      # Lambda function code
-│   │   └── package.json           # Node.js dependencies
-│   └── private-key-public-key.pem # Your key pair
+├── infrastructure/
+│   └── template.yaml              # CloudFormation template
+├── lambda/
+│   ├── tokenGenerator.js          # Lambda function code
+│   └── package.json               # Node.js dependencies
 ├── player/
 │   ├── player.html                # Test player
-│   └── player.js                  # Player logic with API integration
+│   ├── player.js                  # Player logic with API integration
+│   └── player.css                 # Player styles
+├── images/
+│   └── architecture-diagram.png   # Architecture diagram
+├── resources/                     # Additional resources
 ├── BLOG_POST.md                   # Detailed blog post
 └── README.md                      # This file
 ```
