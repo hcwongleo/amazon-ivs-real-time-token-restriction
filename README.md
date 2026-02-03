@@ -4,7 +4,7 @@ A serverless solution for generating Amazon IVS Real-Time Streaming participant 
 
 ## Overview
 
-This solution implements a secure token generation system that restricts token grants through AWS WAF edge protection and provides fine-grained token control through key-based JWT signing. The key-based approach gives you complete control over your token schema—allowing you to customize claims, set granular TTL policies, add custom attributes, and implement business-specific authorization rules.
+This solution implements a secure token generation system that restricts token grants through AWS WAF protection and provides fine-grained token control through key-based JWT signing. The key-based approach gives you complete control over your token schema—allowing you to customize claims, set granular TTL policies, add custom attributes, and implement business-specific authorization rules.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ The solution implements a secure token generation flow with multiple security la
 
 ### Security Layers
 
-1. **WAF**: Restricts token requests at the edge using geo-blocking and origin validation
+1. **WAF**: Restricts token requests using geo-blocking and origin validation
 2. **TTL Controls**: Customizable token validity periods limit how long tokens remain valid
 3. **Secrets Manager**: Encrypted private key storage with IAM access control
 4. **Token Signatures**: Amazon IVS Real-Time Streaming validates token signatures to ensure authenticity

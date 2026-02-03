@@ -2,39 +2,33 @@
 
 by Leo Wong, Kerry Gao | on 3 Feb 2026 | in Amazon API Gateway, Amazon IVS, AWS Lambda, AWS Secrets Manager, AWS WAF, Media & Entertainment, Media Services, Security, Identity, & Compliance
 
-Real-time interactive streaming enables businesses to engage audiences with ultra-low latency video experiences. Amazon Interactive Video Service (IVS) Real-Time Streaming provides broadcast-grade interactive streaming capabilities, supporting use cases from virtual events to live auctions. A critical component of controlling access to these real-time experiences is managing who can obtain participant tokens.
+Amazon Interactive Video Service (IVS) Real-Time Streaming gives you everything you need to add real-time audio and video to your applications. It supports use cases like virtual events, live auctions, and collaborative applications where multiple hosts and thousands of viewers need to interact in real time. Access to IVS Real-Time stages is controlled through participant tokens—short-lived JWTs that determine who can join and what capabilities they have (publish, subscribe, or both).
 
-This post shows you how to implement a secure token generation system for Amazon IVS Real-Time Streaming using key-based JWT signing with AWS WAF request filtering and customizable TTL controls.
+While token generation is essential for stage access, securing the token endpoint itself is equally critical. Without proper controls, anyone could request tokens and potentially join your stages without authorization. This post shows you how to implement a secure token generation system using key-based JWT signing with AWS WAF protection and defense-in-depth security controls.
 
 ## Solution overview
-
-This solution secures token generation for Amazon IVS Real-Time Streaming through defense-in-depth controls: AWS WAF restricts token requests using geo-blocking and origin validation, customizable TTL controls limit token validity periods, AWS Secrets Manager protects the private key with encryption, and Amazon IVS Real-Time Streaming validates token signatures to ensure authenticity.
 
 Figure 1 shows the architecture for this solution.
 
 ![Figure 1: Architecture diagram showing the request flow from browser → WAF → API Gateway → Lambda → Secrets Manager, with IVS Stage connected separately](images/architecture-diagram.png)
 
-### Security controls for restricting token access
+When a user requests a token, the request flows through the following steps:
 
-**Restricting token generation with AWS WAF**
+1. **Request Token** - The browser sends a POST request with the origin header to AWS WAF.
 
-AWS WAF enforces security policies on token generation requests before they reach your Lambda function:
+2. **Validate Rules (Country and Origin Check)** - AWS WAF checks that both the country code and origin match configured values, blocking unauthorized requests without consuming Lambda resources.
 
-- **Geographic restriction**: Only requests from your configured country are allowed, blocking token generation from unauthorized regions
-- **Origin validation**: Verifies the request comes from your authorized domain (e.g., `http://localhost:3000`), preventing unauthorized websites from obtaining tokens
-- **Combined enforcement**: Both geo-blocking and origin validation must pass using AND logic
-- **CORS support**: Automatically allows OPTIONS requests for browser-based applications
+3. **Forward Request** - Valid requests are forwarded to API Gateway.
 
-Blocked requests receive a 403 Forbidden response without consuming Lambda resources or incurring costs.
+4. **Invoke** - API Gateway invokes the token generator Lambda function.
 
-**Time-based token validity with TTL**
+5. **Retrieve Key** - Lambda fetches the private signing key from Secrets Manager (secured with encryption and IAM access controls).
 
-Generated tokens include an expiration time (TTL) that you control in your Lambda function code. The default is 5 seconds for testing, but you can configure it based on your use case:
-- Short-lived for testing: 5-10 seconds
-- Standard sessions: 30-60 minutes
-- Extended sessions: Multiple hours
+6. **Sign JWT** - Lambda retrieves stage information from IVS API and creates a signed JWT token with customizable expiration time (TTL)—from seconds for testing to hours for extended sessions.
 
-Expired tokens are automatically rejected by Amazon IVS Real-Time Streaming when participants attempt to join.
+7. **Return Token** - API Gateway returns the signed token to the user's browser with CORS headers.
+
+8. **Join with Token** - The user connects to the IVS Real-time Stage using the token, where Amazon IVS validates the signature using the registered public key before granting access.
 
 ## Prerequisites
 
@@ -44,28 +38,26 @@ Before you begin, ensure you have the following:
 - An IAM user with sufficient permissions to deploy Lambda, API Gateway, Secrets Manager, WAF, and CloudFormation resources
 - An existing Amazon IVS Real-Time Streaming stage. For more information, refer to [Creating a stage](https://docs.aws.amazon.com/ivs/latest/RealTimeUserGuide/getting-started-create-stage.html)
 - [Node.js](https://nodejs.org/) 20.x or later installed locally for packaging the Lambda function
-- A generated key pair (private and public keys in PEM format)
 
 ## Walkthrough
 
 In this section, we walk you through the steps to deploy the secure token generation system. The walkthrough follows these high-level steps:
 
-1. Generate keys for JWT signing
-2. Import the public key to AWS IVS
-3. Prepare the Lambda deployment package
-4. Deploy the CloudFormation stack
-5. Set the private key in Secrets Manager
-6. Upload the Lambda function code
-7. Get your API endpoint
-8. Configure and run the player locally
-9. Test token generation with the player
-10. Verify security controls
+1. Set up key pair (generate and import to IVS)
+2. Prepare the Lambda deployment package
+3. Deploy the CloudFormation stack
+4. Set the private key in Secrets Manager
+5. Upload the Lambda function code
+6. Get your API endpoint
+7. Configure and run the player locally
+8. Test token generation with the player
+9. Verify security controls
 
 Complete the steps in the following sections.
 
 ### Step 1: Set up key pair
 
-To enable secure token signing, you need a public/private key pair. The private key stays with you to sign tokens locally, while the public key is registered with Amazon IVS to verify token authenticity when participants join your stage. You have two options for creating the key pair:
+To enable secure token signing, you need a public/private key pair. The private key will be stored in AWS Secrets Manager for Lambda to sign tokens, while the public key is registered with Amazon IVS to verify token authenticity when participants join your stage. You have two options for creating the key pair:
 
 **Option A: Create with the Console (Recommended)**
 
@@ -177,7 +169,7 @@ cd player
 npx http-server -p 3000
 ```
 
-This uses [http-server](https://www.npmjs.com/package/http-server), a simple Node.js web server (which you already have installed from Step 2) to serve the player on port 3000.
+This uses [http-server](https://www.npmjs.com/package/http-server), a simple Node.js web server that npx will download and run to serve the player on port 3000.
 
 Open your browser and navigate to `http://localhost:3000/player.html`
 
@@ -222,8 +214,6 @@ Test that WAF correctly blocks unauthorized token generation requests using the 
 
 **Test 3: View WAF metrics**
 
-Navigate to the [AWS WAF console](https://console.aws.amazon.com/wafv2/) to view security metrics:
-
 1. Navigate to the [AWS WAF console](https://console.aws.amazon.com/wafv2/)
 2. Choose **Web ACLs** → `IVSTokenAPIKeyWebACL`
 3. Choose the **Metrics** tab to view allowed and blocked requests
@@ -240,19 +230,16 @@ To avoid incurring future charges, delete the CloudFormation stack:
 3. Choose **Delete**
 4. Choose **Delete stack** to confirm
 
-This removes all created resources including Lambda, API Gateway, WAF, Secrets Manager secret, IAM roles, and CloudWatch log groups.
+This removes all created resources including Lambda, API Gateway, WAF, Secrets Manager secret, and IAM roles.
 
 ## Conclusion
 
 This solution demonstrates how to secure token generation for Amazon IVS Real-Time Streaming using a defense-in-depth approach. By combining AWS WAF request filtering, customizable TTL controls, and key-based JWT signing, you gain precise control over who can obtain tokens and when they expire—making it suitable for production deployments where secure access control is essential.
 
-For the complete code and deployment templates, visit the [GitHub repository](https://github.com/your-repo) or [contact your AWS account team](https://aws.amazon.com/contact-us/).
+For the complete code and deployment templates, visit the [GitHub repository](https://github.com/hcwongleo/amazon-ivs-real-time-token-restriction.git).
 
 ## Further resources
 
 - [Amazon IVS Real-Time Streaming User Guide](https://docs.aws.amazon.com/ivs/latest/RealTimeUserGuide/)
 - [Distribute Participant Tokens](https://docs.aws.amazon.com/ivs/latest/RealTimeUserGuide/getting-started-distribute-tokens.html)
-- [JWT Token Best Practices](https://datatracker.ietf.org/doc/html/rfc8725)
 - [AWS WAF Developer Guide](https://docs.aws.amazon.com/waf/latest/developerguide/)
-- [AWS Secrets Manager Best Practices](https://docs.aws.amazon.com/secretsmanager/latest/userguide/best-practices.html)
-- [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
