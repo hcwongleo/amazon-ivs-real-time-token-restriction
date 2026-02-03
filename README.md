@@ -8,27 +8,9 @@ This solution implements a secure token generation system that restricts token g
 
 ## Architecture
 
-```
-User Browser (localhost:3000)
-         │
-         ↓
-    AWS WAF (Security Layer)
-    ├─ Allow OPTIONS (CORS)
-    ├─ Geo-blocking: HK
-    └─ Origin check: http://localhost:3000
-         │
-         ↓ (Both checks must pass)
-    API Gateway (/prod/token)
-         │
-         ↓
-    Lambda Function
-    ├─ Fetch private key (Secrets Manager)
-    ├─ Get stage info (IVS GetStage API)
-    └─ Sign JWT with private key
-         │
-         ↓
-    Return Token → User joins IVS Stage
-```
+![Architecture diagram showing the request flow from browser → WAF → API Gateway → Lambda → Secrets Manager, with IVS Stage connected separately](images/architecture-diagram.png)
+
+The solution implements a secure token generation flow with multiple security layers:
 
 ### Security Layers
 

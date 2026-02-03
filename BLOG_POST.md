@@ -12,7 +12,7 @@ This solution secures token generation for Amazon IVS Real-Time Streaming throug
 
 Figure 1 shows the architecture for this solution.
 
-**[PLACEHOLDER: Figure 1 - Architecture diagram showing the request flow from browser → WAF → API Gateway → Lambda → Secrets Manager, with IVS Stage connected separately]**
+![Figure 1: Architecture diagram showing the request flow from browser → WAF → API Gateway → Lambda → Secrets Manager, with IVS Stage connected separately](images/architecture-diagram.png)
 
 ### Security controls for restricting token access
 
@@ -76,11 +76,9 @@ The simplest approach is to create the key pair through the Amazon IVS console:
 3. Choose **Create public key**
 4. Follow the prompts and choose **Create**
 
-**[PLACEHOLDER: Screenshot of the IVS console showing the Create public key button]**
+![PLACEHOLDER: Screenshot of the IVS console showing the Create public key button](images/create-public-key.png)
 
 Amazon IVS generates a new key pair. The public key is imported as a public key resource and the private key is immediately made available for download.
-
-**[PLACEHOLDER: Screenshot showing the private key download dialog with warning message]**
 
 **Important:** Amazon IVS generates the key on the client side and does not store the private key. Be sure you save the key; you cannot retrieve it later.
 
@@ -117,29 +115,19 @@ The `function.zip` file is now ready for upload to Lambda.
 
 Navigate to the [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/) and choose **Create stack**.
 
-**[PLACEHOLDER: Screenshot of CloudFormation console with "Create stack" button highlighted]**
-
 Choose **Upload a template file**, select the `infrastructure/template.yaml` file from your project, and choose **Next**.
-
-**[PLACEHOLDER: Screenshot of template upload page]**
 
 Configure the stack parameters:
 
 - **Stack name**: `ivs-token-generator-key`
 - **StageArn**: Your IVS Stage ARN (e.g., `arn:aws:ivs:us-east-1:123456789012:stage/AbCdEfGhIjKl`)
-- **PublicKeyArn**: The ARN from Step 1 (e.g., `arn:aws:ivs:us-east-1:123456789012:public-key/AbCdEfGhIjKl`)
+- **PublicKeyArn**: The ARN from Step 1 (e.g., `arn:aws:ivs:us-east-1:123456789012:playback-key/AbCdEfGhIjKl`)
 - **AllowedOrigins**: `http://localhost:3000` (or your application's origin)
 - **AllowedCountry**: `HK` (ISO country code)
 
-**[PLACEHOLDER: Screenshot of CloudFormation parameters page with example values filled in]**
-
 Choose **Next**, then **Next** again. On the review page, check **I acknowledge that AWS CloudFormation might create IAM resources**, then choose **Submit**.
 
-**[PLACEHOLDER: Screenshot of the IAM acknowledgment checkbox]**
-
 The stack deployment takes approximately 2-3 minutes. Wait for the status to change to `CREATE_COMPLETE`.
-
-**[PLACEHOLDER: Screenshot showing successful stack creation with CREATE_COMPLETE status]**
 
 ### Step 4: Set private key in Secrets Manager
 
@@ -148,16 +136,11 @@ After the CloudFormation stack is created, you need to manually populate the pri
 1. Navigate to the [AWS Secrets Manager console](https://console.aws.amazon.com/secretsmanager/)
 2. Find and select the secret named `ivs-realtime-private-key`
 3. Choose **Retrieve secret value**, then choose **Edit**
-
-**[PLACEHOLDER: Screenshot of Secrets Manager showing the secret with Edit button]**
-
 4. Replace the placeholder text with your private key from Step 1:
    - If you created the key via IVS Console: Paste the entire `privateKeyMaterial` content
    - If you used OpenSSL: Paste the entire contents of your `priv.pem` file
    - Ensure you include the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` markers
 5. Choose **Save**
-
-**[PLACEHOLDER: Screenshot showing the private key being entered in Secrets Manager]**
 
 The Lambda function will now be able to retrieve and use this private key to sign tokens.
 
@@ -170,20 +153,14 @@ The CloudFormation stack creates the Lambda function with placeholder code. Now 
 3. Select the `function.zip` file you created in Step 2
 4. Choose **Save**
 
-**[PLACEHOLDER: Screenshot of Lambda console showing the upload interface]**
-
 Verify the environment variables are correctly set:
 
 - Navigate to **Configuration** → **Environment variables**
 - Confirm `STAGE_ARN`, `PUBLIC_KEY_ARN`, and `SECRET_NAME` are present
 
-**[PLACEHOLDER: Screenshot of Lambda environment variables]**
-
 ### Step 6: Get your API endpoint
 
 Return to the [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/), select your stack, and choose the **Outputs** tab. Copy the **ApiEndpoint** value.
-
-**[PLACEHOLDER: Screenshot of CloudFormation Outputs tab showing ApiEndpoint value]**
 
 ### Step 7: Configure and run the player
 
@@ -202,11 +179,9 @@ npx http-server -p 3000
 
 This uses [http-server](https://www.npmjs.com/package/http-server), a simple Node.js web server (which you already have installed from Step 2) to serve the player on port 3000.
 
-**[PLACEHOLDER: Screenshot of terminal showing http-server running on port 3000]**
-
 Open your browser and navigate to `http://localhost:3000/player.html`
 
-**[PLACEHOLDER: Screenshot of player interface in browser]**
+![PLACEHOLDER: Screenshot of player interface in browser](images/player-interface.png)
 
 ### Step 8: Test token generation with the player
 
@@ -218,8 +193,6 @@ Click the **Join Stage** button in the player interface. The player will:
 4. AWS WAF validates both the origin and country
 5. If validation passes, the token is returned and used to join the Amazon IVS Real-Time Streaming stage
 
-**[PLACEHOLDER: Screenshot showing successful stage join with video playback]**
-
 Open your browser's developer console (F12) to view the token fetch request and response. A successful token generation will show:
 
 ```json
@@ -227,8 +200,6 @@ Open your browser's developer console (F12) to view the token fetch request and 
   "token": "YOUR_JWT_TOKEN_HERE..."
 }
 ```
-
-**[PLACEHOLDER: Screenshot of browser console showing successful token response]**
 
 ### Step 9: Verify security controls
 
@@ -240,8 +211,6 @@ Test that WAF correctly blocks unauthorized token generation requests using the 
 2. Refresh the player page at `http://localhost:3000/player.html`
 3. Click **Join Stage**
 4. Expected result: Request blocked with 403 Forbidden error in browser console
-
-**[PLACEHOLDER: Screenshot of browser console showing 403 Forbidden error]**
 
 **Test 2: Origin validation**
 
@@ -260,7 +229,7 @@ Navigate to the [AWS WAF console](https://console.aws.amazon.com/wafv2/) to view
 3. Choose the **Metrics** tab to view allowed and blocked requests
 4. You should see metrics for successful token requests and any blocked attempts
 
-**[PLACEHOLDER: Screenshot of WAF Web ACL metrics dashboard showing allowed and blocked requests]**
+![PLACEHOLDER: Screenshot of WAF Web ACL metrics dashboard showing allowed and blocked requests](images/web-acl.png)
 
 ## Clean up resources
 
