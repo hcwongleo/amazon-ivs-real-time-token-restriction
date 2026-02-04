@@ -4,7 +4,15 @@ by Leo Wong, Kerry Gao | on 3 Feb 2026 | in Amazon API Gateway, Amazon IVS, AWS 
 
 Amazon Interactive Video Service (IVS) Real-Time Streaming gives you everything you need to add real-time audio and video to your applications. It supports use cases like virtual events, live auctions, and collaborative applications where multiple hosts and thousands of viewers need to interact in real time. Access to IVS Real-Time stages is controlled through participant tokens—short-lived JWTs that determine who can join and what capabilities they have (publish, subscribe, or both).
 
-While token generation is essential for stage access, securing the token endpoint itself is equally critical. Without proper controls, anyone could request tokens and potentially join your stages without authorization. This post shows you how to implement a secure token generation system using key-based JWT signing with AWS WAF protection and defense-in-depth security controls.
+While token generation is essential for stage access, securing the token endpoint itself is equally critical. Without proper controls, anyone could request tokens and potentially join your stages without authorization. This post demonstrates how to implement a secure token generation system leveraging serverless AWS services—combining AWS WAF, API Gateway, Lambda, and Secrets Manager—where cryptographic key pairs are used to sign JWTs server-side with multiple layers of protection. This architecture delivers several key advantages:
+
+- **Key-based JWT signing with Secrets Manager**: Your private key remains secured in AWS Secrets Manager with encryption at rest and IAM-controlled access, accessible only to your Lambda function—eliminating the need to expose AWS credentials to your application layer.
+
+- **End-to-end serverless solution**: AWS Lambda and API Gateway automatically handle JWT signing, API request routing, and scaling without requiring you to manage infrastructure or implement cryptographic operations yourself.
+
+- **WAF request filtering**: AWS WAF validates origin headers and geographic location before requests reach your Lambda function, preventing unauthorized token requests and reducing compute costs by blocking malicious traffic early.
+
+- **Short-lived TTL controls**: Configurable time-to-live settings let you issue tokens that expire in minutes or hours rather than days, dramatically shrinking the window for token reuse or replay attacks if a token is intercepted.
 
 ## Solution overview
 
