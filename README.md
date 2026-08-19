@@ -79,7 +79,7 @@ After the CloudFormation stack is created, manually populate the private key:
 4. Replace the placeholder text with your private key from step 1:
    - If using Console-generated key: Paste the entire `privateKeyMaterial` content
    - If using OpenSSL: Paste the entire contents of `priv.pem` file
-   - Make sure to include `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` markers
+   - Make sure to include the PEM header and footer lines
 5. Click **Save**
 
 ### 5. Upload Lambda Code
@@ -203,24 +203,6 @@ This removes all resources: Lambda, API Gateway, WAF, Secrets Manager, IAM roles
 - [Distribute Participant Tokens](https://docs.aws.amazon.com/ivs/latest/RealTimeUserGuide/getting-started-distribute-tokens.html)
 - [AWS WAF Developer Guide](https://docs.aws.amazon.com/waf/latest/developerguide/)
 
-## Project Structure
-
-```
-├── infrastructure/
-│   └── template.yaml              # CloudFormation template
-├── lambda/
-│   ├── tokenGenerator.js          # Lambda function code
-│   └── package.json               # Node.js dependencies
-├── player/
-│   ├── player.html                # Test player
-│   ├── player.js                  # Player logic with API integration
-│   └── player.css                 # Player styles
-├── images/
-│   └── architecture-diagram.png   # Architecture diagram
-├── resources/                     # Additional resources
-└── README.md                      # This file
-```
-
 ## License
 
-This project is licensed under Apache-2.0.
+This project is licensed under the MIT License.
