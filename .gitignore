@@ -31,3 +31,6 @@ Thumbs.db
 *.pem
 *.key
 private-key*
+
+# Blog content
+BLOG_POST.md
