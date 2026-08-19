@@ -46,7 +46,7 @@ For more details, see [Distribute Participant Tokens](https://docs.aws.amazon.co
 
 **Option B: Create with OpenSSL and Import**
 
-Alternatively, you can generate a key pair locally using OpenSSL and import the public key to Amazon IVS Real-Time Streaming using the AWS CLI. See the blog post (`BLOG_POST.md`) for detailed steps.
+Alternatively, you can generate a key pair locally using OpenSSL and import the public key to Amazon IVS Real-Time Streaming using the AWS CLI.
 
 ### 2. Prepare Lambda Package
 
@@ -218,7 +218,6 @@ This removes all resources: Lambda, API Gateway, WAF, Secrets Manager, IAM roles
 ├── images/
 │   └── architecture-diagram.png   # Architecture diagram
 ├── resources/                     # Additional resources
-├── BLOG_POST.md                   # Detailed blog post
 └── README.md                      # This file
 ```
 
